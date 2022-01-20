@@ -220,6 +220,22 @@ class Thunder_ML(AutoXGB):
         else:
             return model.predict(X)
 
+    def get_best_params(self):
+        params_path = os.path.join(self.model_config.output, "params.db")
+        if not os.path.exists(params_path):
+            print(f"params doesn't exist. Invalid path: {params_path}")
+            return None 
+
+        best_params = None
+        try:
+            study = optuna.load_study(study_name="autoxgb", storage=f"sqlite:///{params_path}")
+        except Exception as exc:
+            print("Error while loading optuna study from database", exc_info=exc)
+        else:
+            best_params = study.best_params
+        finally:
+            return best_params
+
     @abstractmethod
     def get_model(self, params=None):
         ...
