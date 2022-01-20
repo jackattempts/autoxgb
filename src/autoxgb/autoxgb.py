@@ -17,8 +17,8 @@ from .utils import predict_model, reduce_memory_usage, train_model, data_aug_fun
 @dataclass
 class AutoXGB:
     # required arguments
-    train_filename: str
-    output: str
+    train_filename: Optional[str] = None
+    output: Optional[str] = './output'
 
     # optional arguments
     test_filename: Optional[str] = None
@@ -36,6 +36,8 @@ class AutoXGB:
     data_aug_func: Optional[Callable[[pd.DataFrame, 'ModelConfig', int], pd.DataFrame]] = data_aug_func
 
     def __post_init__(self):
+        assert self.train_filename is not None
+        
         if os.path.exists(self.output):
             raise Exception("Output directory already exists. Please specify some other directory.")
         os.makedirs(self.output, exist_ok=True)
