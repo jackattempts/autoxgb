@@ -53,9 +53,6 @@ class Thunder_ML(AutoXGB):
     def train_step(self, model, xtrain, ytrain, xvalid, yvalid):
         self.fit(model, xtrain, ytrain, xvalid, yvalid)
         
-    def valid_step(self, model, xvalid):
-        return self.predict(model, xvalid)
-        
     def test_step(self, model, xtest):
         return self.predict(model, xtest)
 
@@ -85,18 +82,24 @@ class Thunder_ML(AutoXGB):
         if xtest is not None and self.model_config.test_filename is not None:
             test_pred = np.column_stack(test_pred)
         if save_model:
-            joblib.dump(trained_models, os.path.join(self.model_config.output, f"axgb_model.{fold_idx}"))
+            try:
+                joblib.dump(trained_models, os.path.join(self.model_config.output, f"axgb_model.{fold_idx}"))
+            except:
+                pass
         return ypred, test_pred
         
     def single_step(self, model, xtrain, ytrain, xvalid, yvalid, xtest, fold_idx, save_model=True):
         self.train_step(model, xtrain, ytrain, xvalid, yvalid)
-        ypred = self.valid_step(model, xvalid)
+        ypred = self.test_step(model, xvalid)
 
         test_pred = None
         if xtest is not None and self.model_config.test_filename is not None:
             test_pred = self.test_step(model, xtest)
         if save_model:
-            joblib.dump(model, os.path.join(self.model_config.output, f"axgb_model.{fold_idx}"))
+            try:
+                joblib.dump(model, os.path.join(self.model_config.output, f"axgb_model.{fold_idx}"))
+            except:
+                pass
         return ypred, test_pred
 
     def fetch_problem_params(self):
@@ -128,6 +131,7 @@ class Thunder_ML(AutoXGB):
         self._process_data()
         if training_params is None:
             training_params = self.get_tuned_params()
+        self.training_params = training_params
 
         metrics = Metrics(self.model_config.problem_type)
         scores, final_test_predictions, final_valid_predictions = [], [], {}
@@ -150,6 +154,7 @@ class Thunder_ML(AutoXGB):
                 final_test_predictions.append(test_pred)
 
             # calculate metric
+            print(yvalid.shape, ypred.shape)
             metric_dict = metrics.calculate(yvalid, ypred)
             scores.append(metric_dict)
             logger.info(f"Fold {fold_idx} done!")
