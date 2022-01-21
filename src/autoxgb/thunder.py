@@ -154,7 +154,6 @@ class Thunder_ML(AutoXGB):
                 final_test_predictions.append(test_pred)
 
             # calculate metric
-            print(yvalid.shape, ypred.shape)
             metric_dict = metrics.calculate(yvalid, ypred)
             scores.append(metric_dict)
             logger.info(f"Fold {fold_idx} done!")
