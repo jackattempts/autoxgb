@@ -50,11 +50,11 @@ class Thunder_ML(AutoXGB):
         
         return (xtrain, ytrain), (xvalid, yvalid, valid_ids), (xtest, test_ids)
     
-    def train_step(self, model, xtrain, ytrain, xvalid, yvalid):
-        self.fit(model, xtrain, ytrain, xvalid, yvalid)
+    def train_step(self, model, xtrain, ytrain, xvalid, yvalid, fold_idx):
+        self.fit(model, xtrain, ytrain, xvalid, yvalid, fold_idx)
         
-    def test_step(self, model, xtest):
-        return self.predict(model, xtest)
+    def test_step(self, model, xtest, fold_idx):
+        return self.predict(model, xtest, fold_idx)
 
     def multi_step(self, model, xtrain, ytrain, xvalid, yvalid, xtest, fold_idx, save_model=True):
         ypred = []
@@ -62,17 +62,17 @@ class Thunder_ML(AutoXGB):
         trained_models = []
         for idx in range(len(self.model_config.targets)):
             _m = copy.deepcopy(model)
-            self.train_step(_m, xtrain, ytrain[:, idx], xvalid, yvalid[:, idx])
+            self.train_step(_m, xtrain, ytrain[:, idx], xvalid, yvalid[:, idx], fold_idx)
             trained_models.append(_m)
                 
             if self.model_config.problem_type == ProblemType.multi_column_regression:
-                ypred_temp = self.predict(_m, xvalid, is_proba=False)
+                ypred_temp = self.predict(_m, xvalid, fold_idx, is_proba=False)
                 if xtest is not None and self.model_config.test_filename is not None:
-                    test_pred_temp = self.predict(_m, xtest, is_proba=False)
+                    test_pred_temp = self.predict(_m, xtest, fold_idx, is_proba=False)
             else:
                 ypred_temp = self.predict(_m, xvalid, is_proba=True)[:, 1]
                 if xtest is not None and self.model_config.test_filename is not None:
-                    test_pred_temp = self.predict(_m, xtest, is_proba=True)[:, 1]
+                    test_pred_temp = self.predict(_m, xtest, fold_idx, is_proba=True)[:, 1]
 
             ypred.append(ypred_temp)
             if xtest is not None and self.model_config.test_filename is not None:
@@ -89,12 +89,12 @@ class Thunder_ML(AutoXGB):
         return ypred, test_pred
         
     def single_step(self, model, xtrain, ytrain, xvalid, yvalid, xtest, fold_idx, save_model=True):
-        self.train_step(model, xtrain, ytrain, xvalid, yvalid)
-        ypred = self.test_step(model, xvalid)
+        self.train_step(model, xtrain, ytrain, xvalid, yvalid, fold_idx)
+        ypred = self.test_step(model, xvalid, fold_idx)
 
         test_pred = None
         if xtest is not None and self.model_config.test_filename is not None:
-            test_pred = self.test_step(model, xtest)
+            test_pred = self.test_step(model, xtest, fold_idx)
         if save_model:
             try:
                 joblib.dump(model, os.path.join(self.model_config.output, f"axgb_model.{fold_idx}"))
@@ -212,10 +212,10 @@ class Thunder_ML(AutoXGB):
         study.optimize(optimize_func, n_trials=self.model_config.num_trials, timeout=self.model_config.time_limit)
         return study.best_params
     
-    def fit(self, model, xtrain, ytrain, xvalid, yvalid):
+    def fit(self, model, xtrain, ytrain, xvalid, yvalid, fold_idx):
         model.fit(xtrain, ytrain)
     
-    def predict(self, model, X, is_proba=None):
+    def predict(self, model, X, fold_idx, is_proba=None):
         use_predict_proba, _, _ = self.fetch_problem_params()
         if is_proba is None:
             is_proba = use_predict_proba
