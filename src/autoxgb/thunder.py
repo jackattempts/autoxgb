@@ -31,23 +31,27 @@ class Thunder_ML(AutoXGB):
         train_feather = pd.read_feather(os.path.join(self.model_config.output, f"train_fold_{fold}.feather"))
         valid_feather = pd.read_feather(os.path.join(self.model_config.output, f"valid_fold_{fold}.feather"))
 
+        xtest = None
+        if self.model_config.test_filename is not None:
+            test_feather = pd.read_feather(os.path.join(self.model_config.output, f"test_fold_{fold}.feather"))
+            
         if aug and self.model_config.data_aug_func is not None:
-            train_feather = self.model_config.data_aug_func(train_feather, self.model_config, fold)
+            train_feather, valid_feather, test_feather = self.model_config.data_aug_func(
+                train_feather, valid_feather, test_feather, self.model_config, fold
+            )
 
         xtrain = train_feather[self.model_config.features]
         xvalid = valid_feather[self.model_config.features]
 
         ytrain = train_feather[self.model_config.targets].values
         yvalid = valid_feather[self.model_config.targets].values
-
         valid_ids = valid_feather[self.model_config.idx].values
 
-        xtest, test_ids = None, None
+        test_ids = None
         if self.model_config.test_filename is not None:
-            test_feather = pd.read_feather(os.path.join(self.model_config.output, f"test_fold_{fold}.feather"))
             xtest = test_feather[self.model_config.features]
             test_ids = test_feather[self.model_config.idx].values
-        
+
         return (xtrain, ytrain), (xvalid, yvalid, valid_ids), (xtest, test_ids)
     
     def train_step(self, model, xtrain, ytrain, xvalid, yvalid, fold_idx):
@@ -249,4 +253,5 @@ class Thunder_ML(AutoXGB):
     
     def after_train_fold_cb(self, fold_idx):
         ...
+
 
