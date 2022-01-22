@@ -257,7 +257,7 @@ def table_cutout(df, features_columns, iters=1, p=1.0, max_drop_cols_pct=0.3):
     print('Volume Boost:', len(final_df) / len(df), '\n')
     return final_df
 
-def data_aug_func(train_df, model_config, fold_idx):
+def data_aug_func(train_df, valid_df, test_df, model_config, fold_idx):
     df = table_cutout(train_df, model_config.features, iters=5, p=1.0, max_drop_cols_pct=0.3)
     return df
 
