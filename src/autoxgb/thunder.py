@@ -160,6 +160,7 @@ class Thunder_ML(AutoXGB):
             # calculate metric
             metric_dict = metrics.calculate(yvalid, ypred)
             scores.append(metric_dict)
+            logger.info(metric_dict)
             logger.info(f"Fold {fold_idx} done!")
 
         mean_metrics = dict_mean(scores)
