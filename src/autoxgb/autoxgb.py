@@ -33,6 +33,7 @@ class AutoXGB:
     num_trials: Optional[int] = 1000
     time_limit: Optional[int] = None
     fast: Optional[bool] = False
+    save_model: Optional[bool] = True
     data_aug_func: Optional[Callable[[pd.DataFrame, pd.DataFrame, pd.DataFrame, 'ModelConfig', int], pd.DataFrame]] = data_aug_func
 
     def __post_init__(self):
@@ -234,6 +235,7 @@ class AutoXGB:
         model_config["time_limit"] = self.time_limit
         model_config["fast"] = self.fast
         model_config["data_aug_func"] = self.data_aug_func
+        model_config["save_model"] = self.save_model
 
         self.model_config = ModelConfig(**model_config)
         logger.info(f"Model config: {self.model_config}")

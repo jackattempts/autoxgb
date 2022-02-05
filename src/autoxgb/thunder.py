@@ -149,9 +149,9 @@ class Thunder_ML(AutoXGB):
             (xtrain, ytrain), (xvalid, yvalid, valid_ids), (xtest, test_ids) = self.load_fold_data(fold_idx, aug=True)
 
             if self.model_config.problem_type in (ProblemType.multi_column_regression, ProblemType.multi_label_classification):
-                ypred, test_pred = self.multi_step(model, xtrain, ytrain, xvalid, yvalid, xtest, fold_idx)
+                ypred, test_pred = self.multi_step(model, xtrain, ytrain, xvalid, yvalid, xtest, fold_idx, save_model=self.model_config.save_model)
             else:
-                ypred, test_pred = self.single_step(model, xtrain, ytrain, xvalid, yvalid, xtest, fold_idx)
+                ypred, test_pred = self.single_step(model, xtrain, ytrain, xvalid, yvalid, xtest, fold_idx, save_model=self.model_config.save_model)
                 
             final_valid_predictions.update(dict(zip(valid_ids, ypred)))
             if self.model_config.test_filename is not None:
