@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from functools import partial
 from dataclasses import dataclass
 
+import gc
 import joblib
 import numpy as np
 import optuna
@@ -162,6 +163,10 @@ class Thunder_ML(AutoXGB):
             scores.append(metric_dict)
             logger.info(metric_dict)
             logger.info(f"Fold {fold_idx} done!")
+            
+            del model
+            del xtrain, ytrain, xvalid, yvalid, valid_ids, xtest, ypred, test_pred
+            gc.collect()
 
         mean_metrics = dict_mean(scores)
         logger.info(f"Metrics: {mean_metrics}")
@@ -171,6 +176,7 @@ class Thunder_ML(AutoXGB):
             save_test_predictions(final_test_predictions, self.model_config, target_encoder, test_ids, "test_predictions.csv")
         else:
             logger.info("No test data supplied. Only OOF predictions were generated")
+        del test_ids
 
     def objective(self, trial):
         tuning_params = self.params_for_optuna(trial)
