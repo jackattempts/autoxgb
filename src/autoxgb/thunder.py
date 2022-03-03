@@ -143,6 +143,8 @@ class Thunder_ML(AutoXGB):
 
         dl = tqdm(range(self.model_config.num_folds)) if show_progress else range(self.model_config.num_folds)
         for fold_idx in dl:
+            if self.model_config.folds2run is not None and fold_idx not in self.model_config.folds2run:
+                continue
             model = self.get_model(params=training_params)
 
             logger.info(f"Training and predicting for fold {fold_idx}")
