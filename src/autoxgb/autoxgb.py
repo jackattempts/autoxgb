@@ -35,6 +35,7 @@ class AutoXGB:
     fast: Optional[bool] = False
     save_model: Optional[bool] = True
     folds2run: Optional[List[int]] = None
+    reduce_memory: Optional[bool] = True
     data_aug_func: Optional[Callable[[pd.DataFrame, pd.DataFrame, pd.DataFrame, 'ModelConfig', int], pd.DataFrame]] = data_aug_func
 
     def __post_init__(self):
@@ -152,13 +153,15 @@ class AutoXGB:
     def _process_data(self):
         logger.info("Reading training data")
         train_df = pd.read_csv(self.train_filename)
-        train_df = reduce_memory_usage(train_df)
+        if self.reduce_memory:
+            train_df = reduce_memory_usage(train_df)
         problem_type = self._determine_problem_type(train_df)
 
         train_df = self._inject_idxumn(train_df)
         if self.test_filename is not None:
             test_df = pd.read_csv(self.test_filename)
-            test_df = reduce_memory_usage(test_df)
+            if self.reduce_memory:
+                test_df = reduce_memory_usage(test_df)
             test_df = self._inject_idxumn(test_df)
 
         # create folds
@@ -238,6 +241,7 @@ class AutoXGB:
         model_config["data_aug_func"] = self.data_aug_func
         model_config["save_model"] = self.save_model
         model_config["folds2run"] = self.folds2run
+        model_config["reduce_memory"] = self.reduce_memory
 
         self.model_config = ModelConfig(**model_config)
         logger.info(f"Model config: {self.model_config}")

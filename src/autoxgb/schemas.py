@@ -23,5 +23,6 @@ class ModelConfig(BaseModel):
     fast: bool
     save_model: Optional[bool] = True
     folds2run: Optional[List[int]] = None
+    reduce_memory: Optional[bool] = True
     data_aug_func: Optional[Callable[[pd.DataFrame, pd.DataFrame, pd.DataFrame, 'ModelConfig', int], pd.DataFrame]] = None
     
